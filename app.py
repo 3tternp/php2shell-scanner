@@ -26,6 +26,11 @@ LIMIT = asyncio.Semaphore(2)
 
 @app.middleware("http")
 async def basic_auth(request: Request, call_next):
+    # Browser CORS preflight carries no credentials. Let CORSMiddleware
+    # validate the Origin and requested headers/method, rather than
+    # responding with a Basic Auth challenge before the preflight.
+    if request.method == "OPTIONS" and request.headers.get("origin"):
+        return await call_next(request)
     if request.url.path == "/health":
         return await call_next(request)
     user = os.getenv("SCANNER_USERNAME", "")
