@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: php2shell-scanner
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: SCANNER_USERNAME
+        sync: false
+      - key: SCANNER_PASSWORD
+        sync: false
+      - key: SCANNER_ALLOWED_DOMAINS
+        sync: false
