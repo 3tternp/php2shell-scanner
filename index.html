@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0a1020"><title>PHP2Shell Scanner · Web Assessment</title>
+<style>
+:root{color-scheme:dark;font-family:Inter,ui-sans-serif,system-ui,sans-serif;background:#080f1d;color:#eaf2ff}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 80% -20%,#12345a 0,transparent 55%),#080f1d}
+.wrap{max-width:1080px;margin:auto;padding:25px}header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #263448;padding-bottom:20px}
+.logo{font-weight:800;font-size:21px;letter-spacing:-.6px}.logo span{color:#38bdf8}.tag{font-size:12px;border:1px solid #36516a;padding:8px 11px;border-radius:40px;color:#9cb5ce}
+.hero{padding:68px 0 30px;max-width:760px}.eyebrow{color:#7dd3fc;font-size:13px;font-weight:800;letter-spacing:.13em}h1{font-size:clamp(35px,6vw,58px);line-height:1.09;letter-spacing:-2px;margin:16px 0}p{color:#abbcd1;line-height:1.65}h2{font-size:19px}
+.grid{display:grid;grid-template-columns:1.3fr .7fr;gap:20px}.panel{background:#131f32;border:1px solid #2c3d55;border-radius:16px;padding:26px;box-shadow:0 20px 70px #0002}
+label{display:block;margin:16px 0 8px;font-weight:650;font-size:14px}input[type=text],textarea{width:100%;background:#0a1525;border:1px solid #374b66;border-radius:10px;color:white;padding:15px;font:inherit}
+textarea{min-height:150px;resize:vertical}input:focus,textarea:focus{outline:2px solid #38bdf8}
+.check{display:flex;align-items:flex-start;gap:10px;color:#aec0d4;font-size:13px;line-height:1.5}.check input{margin-top:3px}
+button{background:#38bdf8;color:#061321;padding:13px 18px;border:0;border-radius:10px;font-weight:800;cursor:pointer}button:hover{background:#7dd3fc}
+button.secondary{background:#243752;color:#dceeff}button:disabled{opacity:.55;cursor:not-allowed}
+.notice{background:#2b291a;border:1px solid #8e7136;border-radius:12px;padding:13px 16px;color:#f5d99f;font-size:13px;line-height:1.6}
+small{color:#9fb2ca}.features{display:grid;gap:11px;margin-top:22px}.feature{border-bottom:1px solid #2b3b51;padding-bottom:10px;color:#b5c8df}
+.status{margin:16px 0;padding:13px;border-radius:9px;background:#0b1a2d;color:#acdafa}
+.finding{padding:17px;border:1px solid #34455b;border-radius:10px;margin:10px 0}.severity{font-size:11px;font-weight:900;color:#fcd34d;text-transform:uppercase}
+code{overflow-wrap:anywhere;color:#7dd3fc}footer{margin:45px 0;color:#8aa0b8;font-size:13px}
+@media(max-width:720px){.grid{grid-template-columns:1fr}.hero{padding-top:40px}}
+</style></head><body><div class="wrap">
+<header><div class="logo">◈ PHP<span>2Shell</span> Scanner</div><div class="tag">GitHub Pages · Browser Mode</div></header>
+<section class="hero"><div class="eyebrow">AUTHORIZED WEB SECURITY ASSESSMENT</div><h1>Inspect your web application’s visible security posture.</h1><p>Browser-based technology hints, HTTP header checks, and downloadable findings. Designed for permitted assessments of PHP-powered applications and CMS websites.</p></section>
+<div class="grid"><section class="panel"><h2>New assessment</h2><div class="notice"><strong>Browser-mode limitation:</strong> GitHub Pages cannot run the Python scanner. This page can inspect a website only if its server explicitly permits cross-origin browser reads (CORS). Most third-party sites do not. No exploitation, remote file scanning, PHP2Shell verification, or full CVE scanning occurs.</div>
+<label for="domain">Target domain</label><input id="domain" type="text" placeholder="https://your-authorized-domain.example" autocomplete="url">
+<label class="check"><input id="auth" type="checkbox"> I own this website or have written authorization to assess it.</label>
+<p><button id="run">Run browser assessment</button></p>
+<div id="status" class="status" role="status">Ready · No scan started</div>
+<div id="report" hidden><h2>Assessment findings</h2><div id="summary"></div><div id="findings"></div><button id="download" class="secondary">Download JSON report</button></div>
+</section>
+<aside class="panel"><h2>Inspection modules</h2><div class="features">
+<div class="feature">✓ HTTP security headers</div><div class="feature">✓ Visible CMS indicators</div><div class="feature">✓ PHP technology disclosure</div><div class="feature">✓ Basic error disclosure indicators</div><div class="feature">✓ JSON evidence export</div>
+<div class="feature">– PHP2Shell exploit confirmation <small>(not available)</small></div>
+<div class="feature">– Server-side web shell detection <small>(requires backend or agent)</small></div>
+<div class="feature">– CMS plugin CVE inventory <small>(requires authenticated inventory)</small></div>
+</div><p><small>Prefer the repository’s FastAPI application for server-side authorized assessments. GitHub Pages is static hosting only.</small></p></aside></div>
+<footer>PHP2Shell Scanner MVP · Passive browser-readable evidence only. No results imply a website is secure.</footer>
+</div>
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+let lastReport=null;
+function setStatus(s){$("status").textContent=s;}
+function addFinding(findings,title,severity,evidence,remediation){findings.push({title,severity,evidence,remediation});}
+$("run").addEventListener("click",async()=>{
+ $("report").hidden=true;lastReport=null;
+ if(!$("auth").checked){setStatus("Authorization confirmation is required.");return;}
+ let input=$("domain").value.trim();
+ let url;
+ try{url=new URL(/^https?:\/\//i.test(input)?input:"https://"+input);
+ if(url.protocol!=="https:" || !url.hostname.includes(".") || url.username || url.password || (url.pathname!=="/"&&url.pathname!=="") || url.search || url.hash || url.port){throw Error("Enter a HTTPS domain without a path, port, credentials or query.");}
+ }catch(e){setStatus("Invalid target: "+e.message);return;}
+ $("run").disabled=true;setStatus("Requesting homepage via browser CORS…");
+ try{
+ const controller=new AbortController(); const timer=setTimeout(()=>controller.abort(),12000);
+ let response;
+ try{response=await fetch(url.origin+"/",{method:"GET",mode:"cors",credentials:"omit",redirect:"error",cache:"no-store",signal:controller.signal});}finally{clearTimeout(timer);}
+ let body=(await response.text()).slice(0,300000);
+ let findings=[],tech=[];
+ for(let [name,pattern] of Object.entries({"WordPress":/wp-content\/|wp-includes\//i,"Drupal":/drupalSettings|\/sites\/default\//i,"Joomla":/com_content|Joomla!/i,"Laravel":/laravel_session|csrf-token/i,"Bootstrap":/bootstrap(?:\.min)?\.(?:css|js)/i,"jQuery":/jquery(?:\.min)?\.js/i})){if(pattern.test(body))tech.push(name);}
+ for(let name of ["content-security-policy","strict-transport-security","x-content-type-options","referrer-policy"]){
+ if(!response.headers.get(name)){addFinding(findings,"Header unavailable: "+name,"Informational","Header not readable by browser (absent or not exposed by CORS).","Verify the actual response headers using an authorized server-side assessment.");}}
+ for(let name of ["server","x-powered-by"]){let v=response.headers.get(name);if(v){tech.push(name+": "+v);if(name==="x-powered-by")addFinding(findings,"Technology disclosure","Low",v,"Consider removing unnecessary disclosure headers.");}}
+ if(/<h1>Index of \/|<title>Index of \/|Fatal error|Uncaught Exception|PHP Warning:/i.test(body)){addFinding(findings,"Possible listing or error disclosure","Medium","Recognizable error or index text on the homepage.","Review production error output and directory listings.");}
+ lastReport={domain:url.hostname,assessed_at:new Date().toISOString(),mode:"Browser CORS limited",http_status:response.status,technologies:tech,findings,limitations:"Not a PHP2Shell test. Headers may be unreadable due to CORS. Only homepage examined."};
+ $("summary").textContent="HTTP "+response.status+" · "+findings.length+" findings · "+tech.length+" technology hints";
+ $("findings").replaceChildren();
+ for(let f of findings){const box=document.createElement("div");box.className="finding";
+ const title=document.createElement("strong");title.textContent=f.title;const sev=document.createElement("div");sev.className="severity";sev.textContent=f.severity;
+ const p=document.createElement("p");p.textContent=f.evidence+" — "+f.remediation;box.append(sev,title,p);$("findings").append(box);}
+ $("report").hidden=false;setStatus("Completed: browser-visible assessment only.");
+ }catch(err){setStatus("Unable to read this website from GitHub Pages. This is usually a CORS restriction, redirect, or network error. No scan was performed. Use the FastAPI backend for authorized server-side scanning.");}
+ finally{$("run").disabled=false;}
+});
+$("download").addEventListener("click",()=>{if(!lastReport)return;let blob=new Blob([JSON.stringify(lastReport,null,2)],{type:"application/json"}),a=document.createElement("a"),u=URL.createObjectURL(blob);a.href=u;a.download="php-cms-browser-assessment.json";a.click();setTimeout(()=>URL.revokeObjectURL(u),1000);});
+</script></body></html>
