@@ -12,6 +12,7 @@ from urllib.parse import urlparse
 
 import httpx
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, Response, StreamingResponse
 from pydantic import BaseModel, Field
 from reportlab.lib.pagesizes import A4
@@ -19,6 +20,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 
 app = FastAPI(title="Authorized PHP and CMS Security Scanner", version="0.2.0")
+app.add_middleware(CORSMiddleware, allow_origins=["https://3tternp.github.io"], allow_methods=["GET","POST"], allow_headers=["Authorization","Content-Type"], allow_credentials=False)
 results = {}
 LIMIT = asyncio.Semaphore(2)
 
